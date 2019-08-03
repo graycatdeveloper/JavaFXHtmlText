@@ -40,3 +40,6 @@ Html.set(myTextFlow, "Test <font color='red'>red text</font> with <a href='https
         .setDefaultFontSize(20)
         .setDefaultClasses("my-text-shadow-class"))
 ```
+
+Any of your ideas are accepted!
+--------
