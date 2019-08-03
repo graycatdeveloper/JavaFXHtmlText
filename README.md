@@ -19,6 +19,13 @@ dependencies {
 }
 ```
 
+**Prepare TextFlow for best effect**
+```java
+TextFlow textFlow = new TextFlow();
+textFlow.setPrefHeight(0);
+textFlow.setMaxHeight(TextFlow.USE_PREF_SIZE);
+```
+
 Usage
 --------
 ```java
