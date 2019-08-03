@@ -38,7 +38,7 @@ Html.set(myTextFlow, "Test <font color='red'>red text</font> with <a href='https
         .setDefaultFontFamily("Roboto Condensed Regular")
         .setDefaultColor("#cecece")
         .setDefaultFontSize(20)
-        .setDefaultClasses("my-text-shadow-class"))
+        .setDefaultClasses("my-text-shadow-class class-1 class-2 etc"))
 ```
 
 Any of your ideas are accepted!
