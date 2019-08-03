@@ -7,6 +7,7 @@ Features
 * Line-break
 * Default Text style Options
 * Text ```-fx-background-color``` in process...
+* Word break in process...
 
 Dependencies
 --------
