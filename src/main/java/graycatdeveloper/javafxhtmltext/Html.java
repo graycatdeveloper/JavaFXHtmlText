@@ -21,6 +21,10 @@ import java.util.Map;
 
 public final class Html {
 
+    private final ArrayList<Text> result = new ArrayList<>();
+    private final HashSet<Element> elements = new HashSet<>();
+    private final Options defaultOptions = new Options();
+
     public class Options {
 
         private String defaultFontFamily, defaultColor = "white";
@@ -48,97 +52,75 @@ public final class Html {
         }
     }
 
-    private final ArrayList<Text> result = new ArrayList<>();
-    private final HashSet<Element> elements = new HashSet<>();
-    private final Options defaultOptions = new Options();
-
     public static void set(TextFlow textFlow, String source, Options... options) {
         Html html = new Html();
-        //Background background = new Background(textFlow);
+        boolean o = options != null && options.length > 0;
         html.parse(Jsoup.parse(source), html.elements, html.result,
-                options != null ? options[0].defaultClasses : html.defaultOptions.defaultClasses,
-                options != null ? options[0].defaultFontFamily : html.defaultOptions.defaultFontFamily,
-                options != null ? options[0].defaultColor : html.defaultOptions.defaultColor,
-                options != null ? options[0].defaultFontSize : html.defaultOptions.defaultFontSize/*,
+                o ? options[0].defaultClasses : html.defaultOptions.defaultClasses,
+                o ? options[0].defaultFontFamily : html.defaultOptions.defaultFontFamily,
+                o ? options[0].defaultColor : html.defaultOptions.defaultColor,
+                o ? options[0].defaultFontSize : html.defaultOptions.defaultFontSize/*,
                 background*/);
-        //background.apply(list);
         textFlow.getChildren().clear();
         textFlow.getChildren().addAll(html.result.toArray(new Text[0]));
     }
 
-    private void parse(Node start, HashSet<Element> elements, ArrayList<Text> result,
+    private void parse(final Node start, HashSet<Element> elements, ArrayList<Text> result,
                        List<String> defaultClasses, String defaultFontFamily, String defaultColor,
                        double defaultFontSize/*, Background background*/) {
-        int i = 0;
-        while (true) {
-            try {
-                Node node = start.childNode(i);
-                i++;
-                String name = node.nodeName();
+        for (int i = 0; i < start.childNodeSize(); i++) {
+            final Node node = start.childNode(i);
 
-                if (!(name.equals("#root") || name.equals("html") || name.equals("head"))) {
-                    if (node.nodeName().startsWith("#")) {
-                        TextNode tn = (TextNode) node;
+            String name = node.nodeName();
+            //System.out.println("name: " + name);
 
-                        Text text = new Text(tn.text());
+            if (!(name.equals("#root") || name.equals("html") || name.equals("head"))) {
+                if (node.nodeName().startsWith("#")) {
+                    TextNode tn = (TextNode) node;
+                    //System.out.println("#text: '" + tn.text() + "'");
 
-                        StringBuilder s = new StringBuilder();
+                    Text text = new Text(tn.text());
 
-                        boolean fontFamilyExists = false,
-                                colorExists = false,
-                                sizeExists = false;
+                    HashMap<String, String> styles = new HashMap<String, String>() {{
+                        put("-fx-font-family", "\"" + defaultFontFamily + "\"");
+                        put("-fx-fill", defaultColor);
+                        put("-fx-font-size", String.valueOf(defaultFontSize));
+                    }};
 
-                        if (elements.size() > 0) {
+                    StringBuilder s = new StringBuilder();
 
-                            HashMap<String, String> styles = new HashMap<>();
+                    for (Element e : elements) {
+                        //appendTag(text, e.tagName().toLowerCase(), e);
 
-                            for (Element e : elements) {
+                        for (int z = e.parents().size() - 1; z >= 0; z--) {
+                            //for (int z = 0; z < e.parents().size(); z++) {
+                            Element parent = e.parents().get(z);
+                            //System.out.println("Element: " + e.tagName().toUpperCase() + " => parent: " + z + " - " + parent.tagName());
 
-                                for (int z = e.parents().size() - 1; z >= 0; z--) {
-                                    Element parent = e.parents().get(z);
-
-                                    apply(text, parent, styles/*, background*/);
-                                }
-
-                                apply(text, e, styles/*, background*/);
-                            }
-
-                            for (Map.Entry<String, String> entry : styles.entrySet()) {
-                                String key = entry.getKey();
-
-                                if (key.equals("-fx-font-family")) fontFamilyExists = true;
-                                if (key.equals("-fx-fill")) colorExists = true;
-                                if (key.equals("-fx-font-size")) sizeExists = true;
-
-                                s.append(key).append(":").append(entry.getValue()).append(";");
-                            }
+                            apply(text, parent, styles/*, background*/);
                         }
 
-                        if (!fontFamilyExists)
-                            s.append("-fx-font-family").append(":\"").append(defaultFontFamily).append("\";");
-                        if (!colorExists)
-                            s.append("-fx-fill").append(":").append(defaultColor).append(";");
-                        if (!sizeExists)
-                            s.append("-fx-font-size").append(":").append(defaultFontSize).append(";");
-
-                        text.getStyleClass().addAll(defaultClasses);
-                        text.setStyle(s.toString());
-
-                        result.add(text);
-
-                        elements.clear();
-                    } else {
-                        Element element = (Element) node;
-                        elements.add(element);
+                        apply(text, e, styles/*, background*/);
                     }
+
+                    for (Map.Entry<String, String> entry : styles.entrySet()) {
+                        s.append(entry.getKey()).append(":").append(entry.getValue()).append(";");
+                    }
+
+                    text.getStyleClass().addAll(defaultClasses);
+                    text.setStyle(s.toString());
+
+                    result.add(text);
+
+                    elements.clear();
+                } else {
+                    Element element = (Element) node;
+                    elements.add(element);
                 }
-
-                if (node.childNodes().size() > 0)
-                    parse(node, elements, result, defaultClasses, defaultFontFamily, defaultColor, defaultFontSize/*, background*/);
-
-            } catch (IndexOutOfBoundsException ignore) {
-                break;
             }
+
+            if (node.childNodes().size() > 0)
+                parse(node, elements, result, defaultClasses, defaultFontFamily, defaultColor, defaultFontSize/*, background*/);
         }
     }
 
